@@ -1,0 +1,56 @@
+from abc import ABC, abstractmethod
+from typing import Union, Optional
+
+import torch
+
+
+_OptimizerAndScheduler = Union[torch.optim.Optimizer, torch.optim.lr_scheduler.LRScheduler]
+
+
+class Trainer(ABC):
+
+    def __init__(self,
+                 model: torch.nn.Module,
+                 num_epochs: int,
+                 optimizer: Optional[torch.optim.Optimizer] = None,
+                 verbose: bool = True,
+                 device: str | torch.device = 'auto',
+                 use_available_device: bool = True,
+                 callbacks: Optional[Sequence[Callback]] = None,
+                 ) -> None:
+        ...
+
+    def train(self) -> History:
+        ...
+
+    @abstractmethod
+    def load_data(self) -> None:
+        '''
+        Loads the dataset.
+        Here you should define download instructions, splits, preprocessing and other such things.
+        This method does not return anything: store the dataset as `Trainer` attributes.
+        '''
+
+    @abstractmethod
+    def train_data_loader(self) -> torch.utils.data.DataLoader:
+        '''
+        Makes up a training `DataLoader`.
+        '''
+
+    def val_data_loader(self) -> Optional[torch.utils.data.DataLoader]:
+        '''
+        Makes up a validation `DataLoader`. If defined, used to obtain the validation `DataLoader`.
+        '''
+        return None
+    
+    def test_data_loader(self) -> Optional[torch.utils.data.DataLoader]:
+        '''
+        Makes up a test `DataLoader`. If defined, used to obtain the test `DataLoader`.
+        '''
+        return None
+    
+    @abstractmethod
+    def make_optimizer(self) -> torch.optim.Optimizer | _OptimizerAndScheduler:
+        '''
+        Makes up an optimizer with ot without a learning rate scheduler.
+        '''
